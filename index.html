@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#091526">
+  <meta name="description" content="SENTINELA: protótipo acadêmico de monitoramento de drenagem pluvial e mobilidade urbana.">
+  <title>SENTINELA · Monitoramento de Drenagem</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="telemetry.js?v=20261112-status-3"></script>
+  <script defer src="app.js?v=20261112-communication-4"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">◈</span><div><h1>SENTINELA<span class="brand-dot">.</span></h1><p>Monitoramento Inteligente de Drenagem Pluvial</p></div></div>
+    <div class="header-meta"><span class="eyebrow">CIDADES INTELIGENTES</span><span>Sorocaba, SP <span class="divider">/</span> UPX · Facens</span></div>
+  </header>
+  <main>
+    <section class="page-heading"><div><p class="eyebrow">CENTRAL DE MONITORAMENTO</p><h2>Água, risco e mobilidade.</h2><p class="muted">Observação preventiva para uma cidade mais preparada.</p></div><button id="toggleSimulation" class="button primary" aria-pressed="false">Iniciar demonstração</button></section>
+    <div class="context-bar"><span id="sourceLabel" class="source">FONTE REAL · FIREBASE</span><span>Protótipo acadêmico — não é um sistema oficial de alerta público.</span></div>
+    <section id="simulationPanel" class="simulation hidden" aria-label="Controles de simulação">
+      <div><strong>MODO SIMULAÇÃO</strong><p>Cenário fictício e isolado. Referência didática: 30 cm; não calibra o protótipo.</p></div>
+      <div class="simulation-actions"><button id="playScenario" class="button">Reproduzir subida</button><label for="scenario">Cenário</label><select id="scenario"><option value="NORMAL">Normal</option><option value="ATENCAO">Atenção</option><option value="CRITICO">Crítico</option><option value="OFFLINE">Desconectado</option></select></div>
+    </section>
+    <section id="criticalAlert" class="critical hidden" role="alert"><div><strong id="alertTitle">Condição crítica no registro recebido</strong><p id="alertDescription"></p></div><button id="acknowledge" class="button">Reconhecer alerta</button></section>
+    <section class="metrics" aria-label="Indicadores de monitoramento">
+      <article class="card metric"><div class="card-label">01 <span>DISTÂNCIA DO SENSOR</span></div><div class="metric-value" id="distance">—</div><p>Sensor → superfície da água</p><small id="measurementContext">Aguardando consulta válida.</small></article>
+      <article class="card metric"><div class="card-label">02 <span>NÍVEL REPORTADO</span></div><div class="metric-value" id="waterLevel">—</div><p id="levelContext">Altura informada pela fonte</p><small id="calibrationNote">Referência de calibração não fornecida.</small></article>
+      <article class="card metric"><div class="card-label">03 <span>CLASSIFICAÇÃO DE RISCO</span></div><div id="riskBadge" class="risk unknown">Indisponível</div><p id="riskContext">Sem leitura válida</p><small>Normal · Atenção · Crítico</small></article>
+      <article class="card metric"><div class="card-label">04 <span>COMUNICAÇÃO</span></div><div id="connection" class="connection">Aguardando</div><p id="backendStatus">Consultando Firebase…</p><small id="connectionDetail">Conexão do ESP32 ainda não comprovada.</small></article>
+    </section>
+    <div class="workspace">
+      <section class="card map-card"><div class="section-heading"><div><p class="eyebrow">MOBILIDADE URBANA</p><h3>Território em observação</h3></div><span class="tag">ROTAS ILUSTRATIVAS</span></div>
+        <div id="map" aria-label="Mapa ilustrativo de rotas na região de Sorocaba"><p class="map-fallback">Carregando mapa…</p></div>
+        <p id="mapNotice" class="map-notice hidden" role="status"></p>
+        <div class="map-legend"><span><i id="monitoredKey" class="line monitored"></i>Traçado monitorado</span><span><i class="line alternate"></i>Alternativa ilustrativa</span><span>Localização do sensor não confirmada</span></div>
+        <div class="mobility"><span class="route-icon" aria-hidden="true">↗</span><div><h4 id="routeTitle">Aguardando avaliação de risco</h4><p id="routeDescription">Os traçados não comprovam condições de trânsito.</p></div></div>
+        <p class="map-disclaimer">Sem interdição oficial confirmada. Geometria fixa, sem cálculo de trajeto ou garantia de segurança das vias.</p>
+      </section>
+      <aside class="side-stack">
+        <section class="card device-card"><p class="eyebrow">DISPOSITIVO MONITORADO</p><h3>Protótipo ESP32 <span class="tag">01 FONTE</span></h3><p class="muted">Ultrassônico · Wi-Fi · Estrutura 3D</p><dl><div><dt>Identificação da fonte</dt><dd id="deviceId">rio_sorocaba/status</dd></div><div><dt>Última consulta válida</dt><dd id="lastReceived">—</dd></div><div><dt>Horário de medição</dt><dd id="lastMeasured">Não fornecido pela fonte</dd></div></dl><p class="info-note" id="freshnessNote">Consultar o banco não comprova uma nova leitura do sensor.</p></section>
+        <section class="card history-card"><div class="section-heading"><div><p class="eyebrow">EVOLUÇÃO DA ÁGUA</p><h3>Observações da sessão</h3></div><span class="tag" id="historyCount">0</span></div><p id="chartCaption" class="muted">Nível reportado (cm) × horário de consulta</p><svg id="historyChart" viewBox="0 0 440 160" role="img" aria-label="Sem observações na sessão"></svg><p id="chartSummary" class="chart-summary">Aguardando dados válidos.</p><p class="small">Até 120 consultas em memória. Sem persistência; respostas repetidas não comprovam novas medições.</p></section>
+      </aside>
+    </div>
+    <section class="card events-card"><div class="section-heading"><div><p class="eyebrow">REGISTRO OPERACIONAL</p><h3>Eventos desta sessão</h3></div><button id="clearLogs" class="button subtle">Limpar eventos visíveis</button></div><div id="eventLog" class="events" role="log" aria-live="polite"></div><p class="small">Alertas locais por transição. Nenhum SMS, chamada ou atualização de aplicativos de navegação é enviado.</p></section>
+    <footer><span>SENTINELA <span class="muted">/ Tecnologia a serviço da prevenção</span></span><span>UPX · Centro Universitário Facens · revisão 3</span></footer>
+  </main>
+</body>
+</html>
